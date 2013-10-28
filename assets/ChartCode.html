@@ -1,0 +1,150 @@
+<html>
+    <head>
+      <title>State Road Transport Undertaking - Financial and Physical Performance</title>
+      <script type="text/javascript" src="jsapi.js"></script>
+      <script type="text/javascript" src="jquery-2.0.3.min.js"></script>
+      <script type="text/javascript">
+      var SERVER = "http://cloud.acelrtech.com:7777";
+      //var SERVER = "http://localhost:9000";
+          var category = "";
+        google.load("visualization", "1", {packages:["corechart"]});
+		google.setOnLoadCallback(showFirstChart);
+		
+		
+        function drawChartWithData(input,title,ytitle,xtitle) {
+        var data = google.visualization.arrayToDataTable(input);
+        var options = {
+            title: title,
+            vAxis: {title: ytitle, titleTextStyle: {color: 'red'}},
+            hAxis: {title: xtitle, titleTextStyle: {color: 'Green'}}
+        };
+        var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+        }
+
+        function getDataAndDisplay(type,title,ytitle,xtitle,srtu) {
+            var url = SERVER + "/data/" + type
+            if (srtu.length > 0) {
+                url = SERVER + "/srtu/data/" + type + "/" + srtu
+            }
+        $.ajax({
+        url: url,
+        })
+        .done(function( data ) {
+        if ( console && console.log ) {
+        var obj = new Array()
+        obj.push(data.header)
+        for(var i = 0; i < data.data.length; i++) {
+        if (data.data[i] != null) {
+        obj.push(data.data[i])
+        }
+        }
+        //console.log("Data to be shown:" + JSON.stringify(obj))
+        drawChartWithData(obj,title,ytitle,xtitle)
+        }
+        });
+        }
+
+        function getAllSRTU() {
+            var url = SERVER + "/list/srtu"
+        $.ajax({
+        url: url
+        })
+        .done(function( data ) {
+        var s = ""
+        var input = data.data.split("#")
+        s = s + '<option value="">Choose SRTU</option>'
+
+        for(var i = 0; i < input.length; i++) {
+           var rtu = input[i]
+           s = s + '<option value="' + rtu + '">' + rtu + '</option>'
+        }
+            $("#srtu" ).html(s)
+        });
+
+        }
+
+        function updateChart() {
+            var srtu = $("#srtu" ).val()
+            if (srtu.length > 0) {
+                if (category == "revenue_cost") {
+                getDataAndDisplay("revenue_cost","Revenue Performance of - " + srtu,"Count", "Year",srtu)
+                }
+                if (category == "passenger_accidents") {
+                    getDataAndDisplay("passenger_accidents","Accidents Performance of - " + srtu,"Count", "Year",srtu)
+                }
+                 if (category == "fleet_held_operated") {
+           			 getDataAndDisplay(category,"Utilization Performance of - " + srtu,"Count", "Year",srtu)
+            	}
+            }
+        }
+      function revenueTrendChart() {
+      $("#srtu_box" ).show()
+          $("#srtu" ).val("")
+        category = "revenue_cost"
+        var srtu = $("#srtu" ).val()
+        if (srtu.length > 0) {
+        getDataAndDisplay("revenue_cost","Revenue Performance of - " + srtu,"Count", "Year",srtu)
+        }else {
+        getDataAndDisplay("revenue_cost","Revenue Performance of Indian State Transport Corporations","Amount (in Lakh Rupees)", "Year", "")
+        }
+      }
+      function safetyTrendChart() {
+      $("#srtu_box" ).show()
+      $("#srtu" ).val("")
+          category = "passenger_accidents"
+      var srtu = $("#srtu" ).val()
+      if (srtu.length > 0) {
+      getDataAndDisplay("passenger_accidents","Accidents Performance of - " + srtu,"Count", "Year",srtu)
+      }else {
+      getDataAndDisplay("passenger_accidents","Safety Performance of State Road Transport Undertaking","Count", "Year", "")
+        }
+      }
+      
+      function fleetTrendChart() {
+      $("#srtu_box" ).show()
+      $("#srtu" ).val("")
+      category = "fleet_held_operated"
+      var srtu = $("#srtu" ).val()
+      if (srtu.length > 0) {
+      getDataAndDisplay(category,"Utilization Performance of - " + srtu,"Count", "Year",srtu)
+      }else {
+      getDataAndDisplay(category,"Utilization Performance of State Road Transport Undertaking","Count", "Year", "")
+      }
+      }
+      
+
+	function showFirstChart() {
+			getAllSRTU();
+			getDataAndDisplay("passenger_accidents","Safety Performance of State Road Transport Undertaking","Count", "Year", "")
+		}
+	
+		/*
+        $(document).ready(function() {
+            console.log("Getting system Ready")
+            getAllSRTU()
+            //getDataAndDisplay("revenue_cost","Revenue Performance of Indian State Transport Corporations","Amount (in Lakh Rupees)", "Year", "")
+            getDataAndDisplay("passenger_accidents","Safety Performance of State Road Transport Undertaking","Count", "Year", "")
+            //getDataAndDisplay("fleet_held_operated","Utilization Performance of State Road Transport Undertaking","Count", "Year", "")
+            //var srtu = "Andhra Pradesh SRTC"
+            //getDataAndDisplay("passenger_accidents","Accidents Performance of - " + srtu,"Count", "Year",srtu)
+        });*/
+
+      </script>
+    </head>
+    <body>
+     <h3>SRTU Performance</h3>
+      <div>
+         <input type="button" name="revenue_trend" id="revenue_trend" value="Revenue Trend" onclick="revenueTrendChart();"/>
+         <input type="button" name="safety_trend" id="safety_trend" value="Safety Trend" onclick="safetyTrendChart();"/>
+     	<input type="button" name="fleet_trend" id="fleet_trend" value="Utilization Trend" onclick="fleetTrendChart();"/>
+      </div>
+      <div style="display: none;" id="srtu_box">
+          View data by SRTU - <select id="srtu" name="srtu" onchange="updateChart();"></select>
+      </div>
+      <div id="chart_div" style="width: 1200px; height: 500px;"></div>
+      <p>
+           Created by - <a href="http://www.acelrtech.com"><strong>ACELR Tech Labs</strong></a>
+       </p>
+    </body>
+</html>
